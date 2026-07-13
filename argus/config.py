@@ -21,6 +21,8 @@ class Config:
     vault_path: Path = DEFAULT_VAULT
     db_path: Path = REPO_ROOT / "argus" / "data" / "argus.db"
     prompt_path: Path = REPO_ROOT / "argus" / "prompts" / "lore_classifier.txt"
+    consistency_prompt_path: Path = REPO_ROOT / "argus" / "prompts" / "consistency_sentinel.txt"
+    consistency_rules_path: Path = REPO_ROOT / "argus" / "config" / "tef_consistency_rules.yaml"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "mistral-nemo:latest"
     use_llm: bool = True

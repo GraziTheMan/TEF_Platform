@@ -11,9 +11,12 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
+from . import frontmatter
 from .classify import Classifier
 from .config import Config
+from .consistency import ConsistencySentinel
 from .llm import OllamaClient
 from .pipeline import Pipeline
 from .store import Store
@@ -69,6 +72,66 @@ def cmd_classify(args) -> int:
     return 0
 
 
+_STATUS_ICON = {"passed": "OK ", "flagged": "FLAG", "blocked": "BLOCK", "error": "ERR "}
+
+
+def cmd_check(args) -> int:
+    config = Config.load()
+    llm = OllamaClient(config.ollama_base_url, config.ollama_model)
+    if not llm.available():
+        print("ERROR: Consistency Sentinel needs the LLM. Start Ollama and retry.",
+              file=sys.stderr)
+        return 2
+    sentinel = ConsistencySentinel(llm, config.consistency_rules_path,
+                                   config.consistency_prompt_path)
+    store = Store(config.db_path)
+
+    docs = store.list_documents()
+    if args.id:
+        docs = [d for d in docs if d["document_id"] == args.id]
+    if args.tier:
+        docs = [d for d in docs if d["tier"] in args.tier]
+    if args.limit:
+        docs = docs[:args.limit]
+    if not docs:
+        print("No matching documents. Run `py -m argus classify --apply` first.")
+        return 0
+
+    print(f"Argus consistency check — {len(docs)} document(s), model {config.ollama_model}\n")
+    print(f"{'STATUS':<6} {'ID':<16} {'#':<3} TITLE")
+    print("-" * 80)
+    blocked_or_flagged = []
+    for d in docs:
+        path = Path(d["source_path"])
+        if not path.exists():
+            print(f"{'SKIP':<6} {d['document_id']:<16}     (missing file)")
+            continue
+        fm, body = frontmatter.read(path)
+        result = sentinel.check(d["document_id"], d.get("title") or path.stem, body,
+                                source_path=str(path))
+        icon = _STATUS_ICON.get(result.status, "?")
+        print(f"{icon:<6} {d['document_id']:<16} {len(result.contradictions):<3} "
+              f"{(d.get('title') or path.stem)[:48]}")
+        for c in result.contradictions:
+            print(f"       └─ [{c.severity}] {c.explanation[:88]}")
+        if result.status in ("flagged", "blocked"):
+            blocked_or_flagged.append(result)
+        if args.apply and result.status != "error":
+            fm["consistency_status"] = result.status
+            frontmatter.write(path, fm, body)
+            store.set_consistency_status(d["document_id"], result.status)
+            store.record_consistency_findings(d["document_id"], result.contradictions)
+
+    print("-" * 80)
+    print(f"Blocked/flagged: {len(blocked_or_flagged)} of {len(docs)}")
+    if args.apply:
+        print("✅ Applied: consistency_status written to frontmatter + DB.")
+    else:
+        print("(dry run — re-run with --apply to persist consistency_status.)")
+    store.close()
+    return 0
+
+
 def cmd_status(args) -> int:
     config = Config.load()
     store = Store(config.db_path)
@@ -80,6 +143,9 @@ def cmd_status(args) -> int:
         print("Documents by tier:")
         for t, tier in TIERS.items():
             print(f"  {t} {tier.name:<22} {counts.get(t, 0)}")
+        print("\nConsistency status:")
+        for s, n in store.consistency_summary().items():
+            print(f"  {s:<12} {n}")
         print("\nCredit (contributions by contributor):")
         for name, n in store.credit_summary():
             print(f"  {name:<28} {n}")
@@ -103,6 +169,14 @@ def main(argv=None) -> int:
     p_classify.add_argument("--no-llm", action="store_true",
                             help="force the heuristic path even if Ollama is up")
     p_classify.set_defaults(func=cmd_classify)
+
+    p_check = sub.add_parser("check", help="consistency-check documents against canon")
+    p_check.add_argument("--apply", action="store_true",
+                         help="persist consistency_status to frontmatter + DB")
+    p_check.add_argument("--id", help="check a single document by ID")
+    p_check.add_argument("--tier", nargs="*", help="limit to tiers, e.g. --tier T3 T4")
+    p_check.add_argument("--limit", type=int, help="check at most N documents")
+    p_check.set_defaults(func=cmd_check)
 
     p_status = sub.add_parser("status", help="show tier counts and credit")
     p_status.set_defaults(func=cmd_status)

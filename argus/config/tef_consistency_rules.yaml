@@ -1,0 +1,57 @@
+# TEF Lore Consistency Rules (TEF-ARGUS-001 §6.3).
+#
+# Each rule is an established canonical fact. The Consistency Sentinel checks
+# whether a document contradicts any of these. Severity drives routing:
+#   MINOR/MODERATE -> flag,  MAJOR/CRITICAL -> block (see §6.4 thresholds).
+#
+# These facts are the T1/T2 canon anchors. Edit here as canon evolves; the
+# Sentinel reads this file at runtime (no code change needed).
+
+timeline:
+  description: "Events must not violate established chronology."
+  default_severity: MAJOR
+  facts:
+    - "The Cataclysm is the central timeline anchor; events are dated relative to it."
+    - "The Poop Wars PRECEDE and CAUSE the Cataclysm."
+    - "The American Ice Age begins immediately after the Cataclysm."
+    - "Rob Corvin's 50-year war begins after the Cataclysm."
+    - "Joe Corvin's phase shifting triggers at the Cataclysm."
+
+characters:
+  description: "Character traits, abilities, and relationships must not silently change."
+  default_severity: MAJOR
+  facts:
+    - "Phase Shifting is UNIQUE to Joe Corvin."
+    - "CSS (Composite Superorganism Swarm) originated within Rob Corvin's body."
+    - "GLYPH was created by Rob Corvin and found by Barnaby."
+    - "Barnaby Finch is the UNWITTING catalyst - he does not know his role."
+    - "Joe Corvin and Rob Corvin are twin brothers."
+    - "Kreg is illiterate but brilliant."
+
+mechanics:
+  description: "How the universe works must not contradict established rules."
+  default_severity: CRITICAL
+  facts:
+    - "Phase Shifting moves the physical form into the Ether."
+    - "CSS is biological (not technological or digital)."
+    - "CSS is symbiotic (not parasitic)."
+    - "The Cataclysm was intentional (not accidental)."
+    - "Consciousness is substrate-independent."
+    - "Reality is layered and permeable."
+    - "TRR (Thought-Responsive Reality): observation and intent can influence outcomes."
+
+factions:
+  description: "Faction locations, leadership, and capabilities must be consistent."
+  default_severity: MODERATE
+  facts:
+    - "The Mechanists are based in Lima, Ohio."
+    - "The Mechanists are led by Kreg."
+    - "Mechanist power derives from salvaged military/industrial technology."
+
+cross_story:
+  description: "The main narratives must keep their established connections."
+  default_severity: CRITICAL
+  facts:
+    - "Poop Wars -> Cataclysm -> American Ice Age + American Homecoming."
+    - "GLYPH connects Rob (creator) to Barnaby (finder)."
+    - "Barnaby's microbiome is the battlefield that causes the Cataclysm."
