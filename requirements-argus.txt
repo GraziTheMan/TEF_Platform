@@ -1,0 +1,9 @@
+# Argus engine dependencies (first slice).
+# Local-first, minimal, auditable — per FI-ARGUS-001 §0.3.
+pyyaml>=6.0
+httpx>=0.27
+
+# Not yet used, wired in later slices:
+# chromadb>=0.5        # vector store (ontology/cross-vault discovery)
+# apscheduler>=3.10    # nightly pipelines
+# python-telegram-bot>=21   # private Telegram face

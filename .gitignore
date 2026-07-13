@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Argus local data (SQLite DB, generated artifacts)
+argus/data/
+*.db
+
+# Node / Vite (web app, later)
+node_modules/
+dist/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

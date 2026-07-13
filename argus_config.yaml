@@ -1,0 +1,19 @@
+# Argus configuration (TEF).
+# Sensible defaults already point at the sibling TheExtendedFractiverse
+# checkout; this file makes the vault path and model explicit.
+
+vault_path: "C:/Users/grazi/Documents/GitHub/TheExtendedFractiverse"
+
+# Directories inside the vault that Argus ingests/classifies.
+ingest_dirs:
+  - "-unsorted"
+
+use_llm: true
+
+ollama:
+  base_url: "http://localhost:11434"
+  # llama3.1:8b — fits the RTX 2060 (6 GB) with CPU offload headroom (31 GB RAM),
+  # strong at instruction-following and JSON output for classification.
+  model: "llama3.1:8b"
+
+# db_path defaults to argus/data/argus.db (git-ignored).
